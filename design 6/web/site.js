@@ -120,10 +120,11 @@
     if (/artisanal sourdough|smash wagyu|kyoto omakase|heritage dumplings|botanical smoothie|small-batch gelato|gourmet burgers|street chaat|golden samosas|house beverages|desserts/.test(text)) return pages.restaurant;
     if (/explore restaurants|continue shopping|partner kitchens|our kitchens|restaurants|restaurant/.test(text)) return pages.restaurants;
     if (/explore menu/.test(text)) return pages.menu;
-    if (/view menu|view kitchen|master menu|browse full menu|full menu/.test(text)) return pages.restaurant;
+    if (/view menu|view kitchen|master menu|browse full menu|full menu|view \d+ .+ varieties/.test(text)) return pages.restaurant;
     if (/food details|view dish|reserve dish|explore dishes|add to crave cart/.test(text)) return pages.food;
     if (/customization|^modify$/.test(text)) return /modify/.test(text) ? pages.cart : pages.food;
     if (/search|find bites|browse catalog/.test(text)) return pages.search;
+    if (/browse full catalog/.test(text)) return pages.search;
     if (/cart|modify cart/.test(text)) return pages.cart;
     if (/checkout|proceed to/.test(text)) return pages.checkout;
     if (/track order|track active|live tracking/.test(text)) return pages.tracking;
@@ -755,7 +756,8 @@
       location.href = pages.tracking;
       return;
     }
-    const destination = routeForText(text, button);
+    const menuControl = currentPage === pages.menu && button.hasAttribute("onclick");
+    const destination = menuControl ? "" : routeForText(text, button);
     if (destination && !button.form) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -877,6 +879,19 @@
       location.href = `${pages.addresses}?returnTo=${encodeURIComponent(pages.checkout)}`;
       return;
     }
+    if (currentPage === pages.menu) {
+      const foodCard = event.target.closest("#results-food-items .group");
+      const restaurantCard = event.target.closest("#results-restaurants-view .grid > div");
+      if (foodCard) {
+        location.href = pages.food;
+        return;
+      }
+      if (restaurantCard) {
+        location.href = pages.restaurant;
+        return;
+      }
+      return;
+    }
     if (!["exploreRestaurants.html", "search-filter-page.html", "restaurant-details-menu.html"].includes(currentPage)) return;
     const card = event.target.closest("article, .group, [class*='rounded-3xl']");
     if (!card || !card.querySelector("h2, h3, h4")) return;
@@ -926,6 +941,7 @@
 
     const activePathByPage = {
       "design6web.html": "home",
+      "Menu-page.html": "explore-menu",
       "exploreRestaurants.html": "restaurants",
       "restaurant-details-menu.html": "restaurants",
       "food-details-customization.html": "explore-menu",

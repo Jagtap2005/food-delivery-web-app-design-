@@ -94,6 +94,37 @@
     }
 
     function createSharedHeader() {
+        const transitionStyles = document.createElement("style");
+        transitionStyles.textContent = `
+            @view-transition {
+                navigation: auto;
+            }
+
+            ::view-transition-old(root) {
+                animation: 140ms ease-in both naurio-page-exit;
+            }
+
+            ::view-transition-new(root) {
+                animation: 200ms ease-out both naurio-page-enter;
+            }
+
+            @keyframes naurio-page-exit {
+                to { opacity: 0; }
+            }
+
+            @keyframes naurio-page-enter {
+                from { opacity: 0; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                ::view-transition-old(root),
+                ::view-transition-new(root) {
+                    animation-duration: 0.01ms;
+                }
+            }
+        `;
+        document.head.append(transitionStyles);
+
         const header = document.createElement("header");
         header.className = "fixed top-0 w-full z-50 bg-surface/95 backdrop-blur-xl border-b border-surface-container-highest shadow-[0_1px_8px_rgba(0,0,0,0.04)]";
         header.innerHTML = `
@@ -164,12 +195,14 @@
 
         const updateMainOffset = () => {
             const headerHeight = header.offsetHeight;
-            document.querySelectorAll("main").forEach((main) => {
-                main.style.paddingTop = `${headerHeight}px`;
-                if (main.closest(".min-h-screen")) {
-                    main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
-                }
-            });
+            Array.from(document.querySelectorAll("main"))
+                .filter((main) => !main.parentElement.closest("main"))
+                .forEach((main) => {
+                    main.style.paddingTop = `${headerHeight}px`;
+                    if (main.closest(".min-h-screen")) {
+                        main.style.minHeight = `calc(100vh - ${headerHeight}px)`;
+                    }
+                });
         };
         updateMainOffset();
         window.addEventListener("load", updateMainOffset, { once: true });
